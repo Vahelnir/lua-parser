@@ -1,5 +1,6 @@
 export type LexToken =
   | { type: "nil" }
+  | { type: "boolean"; value: boolean }
   | {
       type: (typeof ALLOWED_SPECIAL_CHARS)[number];
     }
@@ -28,6 +29,18 @@ export function lexer(code: string) {
     if (code.slice(cursor - 1, cursor + 2) === "nil") {
       tokens.push({ type: "nil" });
       cursor += 2;
+      continue;
+    }
+
+    if (code.slice(cursor - 1, cursor + 3) === "true") {
+      tokens.push({ type: "boolean", value: true });
+      cursor += 3;
+      continue;
+    }
+
+    if (code.slice(cursor - 1, cursor + 4) === "false") {
+      tokens.push({ type: "boolean", value: false });
+      cursor += 4;
       continue;
     }
 

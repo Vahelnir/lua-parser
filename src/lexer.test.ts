@@ -7,6 +7,20 @@ describe("lexer", () => {
     deepEqual(lexer("nil"), [{ type: "nil" }] satisfies LexToken[]);
   });
 
+  describe("booleans", () => {
+    it("true", () => {
+      deepEqual(lexer("true"), [
+        { type: "boolean", value: true },
+      ] satisfies LexToken[]);
+    });
+
+    it("false", () => {
+      deepEqual(lexer("false"), [
+        { type: "boolean", value: false },
+      ] satisfies LexToken[]);
+    });
+  });
+
   describe("numbers", () => {
     it("4", () => {
       deepEqual(lexer("4"), [
