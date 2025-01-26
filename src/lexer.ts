@@ -61,6 +61,40 @@ export function lexer(code: string) {
       continue;
     }
 
+    if (char === "[" && code[cursor] === "[") {
+      cursor++;
+      let string = "";
+      let depth = 0;
+      while (
+        !(code[cursor] === "]" && code[cursor + 1] === "]" && depth === 0)
+      ) {
+        if (code[cursor] === undefined) {
+          throw new Error("Unfinished string");
+        }
+
+        if (code[cursor] === "[" && code[cursor + 1] === "[") {
+          depth++;
+          string += code.slice(cursor, cursor + 2);
+          cursor += 2;
+          continue;
+        }
+
+        if (code[cursor] === "]" && code[cursor + 1] === "]") {
+          depth--;
+          string += code.slice(cursor, cursor + 2);
+          cursor += 2;
+          continue;
+        }
+
+        string += code[cursor++];
+      }
+
+      cursor += 2;
+
+      tokens.push({ type: "string", value: `[[${string}]]` });
+      continue;
+    }
+
     // numbers
     if (isDigit(char)) {
       let number = char;

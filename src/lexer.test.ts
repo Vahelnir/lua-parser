@@ -46,6 +46,18 @@ describe("lexer", () => {
       ] satisfies LexToken[]);
     });
 
+    it("[[ hello ]]", () => {
+      deepEqual(lexer("[[ hello ]]"), [
+        { type: "string", value: "[[ hello ]]" },
+      ] satisfies LexToken[]);
+    });
+
+    it("[[\\nhello\\n[[ world ]]\\n]]", () => {
+      deepEqual(lexer("[[\nhello\n[[ world ]]\n]]"), [
+        { type: "string", value: "[[\nhello\n[[ world ]]\n]]" },
+      ] satisfies LexToken[]);
+    });
+
     describe("should throw", () => {
       it("'\"", () => {
         throws(() => lexer("'\""), new Error("Unfinished string"));
@@ -55,8 +67,12 @@ describe("lexer", () => {
         throws(() => lexer("\"'"), new Error("Unfinished string"));
       });
 
-      it('"hello\nworld"', () => {
+      it('"hello\\nworld"', () => {
         throws(() => lexer('"hello\nworld"'), new Error("Unfinished string"));
+      });
+
+      it("[[\\nhello\\n[[ world ]]\\n", () => {
+        throws(() => lexer("[[\nhello\n[[ world ]]\n"), "l");
       });
     });
   });
