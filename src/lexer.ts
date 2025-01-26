@@ -1,3 +1,5 @@
+import { FileCursor } from "./file-cursor";
+
 export type LexToken =
   | { type: "keyword"; value: (typeof KEYWORDS)[number] }
   | {
@@ -59,78 +61,68 @@ const PUNCTUATION = ["(", ")", ";", "{", "}", "[", "]", ",", "."] as const;
 // TODO: see how much faster would avoiding regexes be (for isDigit, identifiers, etc)
 
 export function lexer(code: string) {
-  let cursor = 0;
+  const cursor = new FileCursor(code);
   const tokens: LexToken[] = [];
 
-  function match(value: string, customCursor = cursor) {
-    return code.slice(customCursor, customCursor + value.length) === value;
-  }
-
-  while (cursor < code.length) {
-    const char = code[cursor++];
-    if ([" ", "\n", "\t"].includes(char)) {
+  while (cursor.hasNext()) {
+    const peekedChar = cursor.peek();
+    if ([" ", "\n", "\t"].includes(peekedChar)) {
+      cursor.skip();
       continue;
     }
 
-    const foundKeyword = KEYWORDS.find((keyword) => match(keyword, cursor - 1));
+    const foundKeyword = KEYWORDS.find((keyword) => cursor.match(keyword));
     if (foundKeyword) {
       tokens.push({
         type: "keyword",
         value: foundKeyword,
       });
-      cursor += foundKeyword.length - 1;
       continue;
     }
 
-    if (match("true", cursor - 1)) {
+    if (cursor.match("true")) {
       tokens.push({ type: "boolean", value: true });
-      cursor += 3;
       continue;
     }
 
-    if (match("false", cursor - 1)) {
+    if (cursor.match("false")) {
       tokens.push({ type: "boolean", value: false });
-      cursor += 4;
       continue;
     }
 
     // strings
-    if (char === '"' || char === "'") {
+    if (peekedChar === '"' || peekedChar === "'") {
+      const delimiter = cursor.next();
       let string = "";
-      while (code[cursor] !== char) {
-        if (code[cursor] === undefined || code[cursor] === "\n") {
+      while (cursor.peek() !== delimiter) {
+        if (cursor.peek() === undefined || cursor.peek() === "\n") {
           throw new Error("Unfinished string");
         }
 
-        string += code[cursor++];
+        string += cursor.next();
       }
 
       tokens.push({ type: "string", value: `${string}` });
-      cursor++;
+      cursor.skip();
       continue;
     }
 
     // multiline strings
-    if (match("[[", cursor - 1)) {
-      cursor++;
+    if (cursor.match("[[")) {
       let string = extractMultilineString(code, cursor);
-      cursor += string.length + 2;
 
       tokens.push({ type: "string", value: string });
       continue;
     }
 
     // comments
-    if (match("--", cursor - 1)) {
-      cursor++;
+    if (cursor.match("--")) {
       let comment = "";
-      if (code[cursor] === "[" && code[cursor + 1] === "[") {
-        cursor += 2;
+      if (cursor.match("[[")) {
         comment += `${extractMultilineString(code, cursor)}`;
-        cursor += comment.length + 2;
       } else {
-        while (code[cursor] && code[cursor] !== "\n") {
-          comment += code[cursor++];
+        while (cursor.peek() && cursor.peek() !== "\n") {
+          comment += cursor.next();
         }
       }
 
@@ -139,33 +131,33 @@ export function lexer(code: string) {
     }
 
     // numbers
-    if (isDigit(char)) {
-      let number = char;
-      while (isDigit(code[cursor])) {
-        number += code[cursor++];
+    if (isDigit(peekedChar)) {
+      let number = cursor.next();
+      while (isDigit(cursor.peek())) {
+        number += cursor.next();
       }
 
       // floats
-      if (code[cursor] === "." && isDigit(code[cursor + 1])) {
-        number += code[cursor++];
-        while (isDigit(code[cursor])) {
-          number += code[cursor++];
+      if (cursor.peek() === "." && isDigit(cursor.peek(1))) {
+        number += cursor.next();
+        while (isDigit(cursor.peek())) {
+          number += cursor.next();
         }
       }
 
       // exponentials
       if (
-        code[cursor] === "e" &&
-        (isDigit(code[cursor + 1]) ||
-          (["+", "-"].includes(code[cursor + 1]) && isDigit(code[cursor + 2])))
+        cursor.peek() === "e" &&
+        (isDigit(cursor.peek(1)) ||
+          (["+", "-"].includes(cursor.peek(1)) && isDigit(cursor.peek(2))))
       ) {
-        number += code[cursor++];
-        if (["+", "-"].includes(code[cursor])) {
-          number += code[cursor++];
+        number += cursor.next();
+        if (["+", "-"].includes(cursor.peek())) {
+          number += cursor.next();
         }
 
-        while (isDigit(code[cursor])) {
-          number += code[cursor++];
+        while (isDigit(cursor.peek())) {
+          number += cursor.next();
         }
       }
 
@@ -173,39 +165,36 @@ export function lexer(code: string) {
       continue;
     }
 
-    const foundOperator = OPERATORS.find((operator) =>
-      match(operator, cursor - 1),
-    );
+    const foundOperator = OPERATORS.find((operator) => cursor.match(operator));
     if (foundOperator) {
       tokens.push({ type: "operator", value: foundOperator });
-      cursor += foundOperator.length - 1;
       continue;
     }
 
-    if (isPunctuation(char)) {
-      tokens.push({ type: "punctuation", value: char });
+    if (isPunctuation(peekedChar)) {
+      tokens.push({ type: "punctuation", value: peekedChar });
+      cursor.skip();
       continue;
     }
 
     // identifiers
-    if (/[a-zA-Z_]/.test(char)) {
-      let identifier = char;
-      while (code[cursor] !== undefined && /[a-zA-Z_0-9]/.test(code[cursor])) {
-        identifier += code[cursor++];
+    if (/[a-zA-Z_]/.test(peekedChar)) {
+      let identifier = cursor.next();
+      while (
+        cursor.peek() !== undefined &&
+        /[a-zA-Z_0-9]/.test(cursor.peek())
+      ) {
+        identifier += cursor.next();
       }
 
       tokens.push({ type: "identifier", value: identifier });
       continue;
     }
 
-    throw new Error(`Unexpected character: ${char}`);
+    throw new Error(`Unexpected character: ${peekedChar}`);
   }
 
   return tokens;
-}
-
-function isOperator(char: string): char is (typeof OPERATORS)[number] {
-  return OPERATORS.includes(char as any);
 }
 
 function isPunctuation(char: string): char is (typeof PUNCTUATION)[number] {
@@ -216,32 +205,31 @@ function isDigit(char: string) {
   return /[0-9]/.test(char);
 }
 
-function extractMultilineString(code: string, cursor: number) {
+function extractMultilineString(code: string, cursor: FileCursor) {
   let string = "";
   let depth = 0;
-  while (!(code[cursor] === "]" && code[cursor + 1] === "]" && depth === 0)) {
-    if (code[cursor] === undefined) {
+  while (!(cursor.doesMatch("]]") && depth === 0)) {
+    if (cursor.peek() === undefined) {
       throw new Error("Unfinished string");
     }
 
-    if (code[cursor] === "[" && code[cursor + 1] === "[") {
+    if (cursor.doesMatch("[[")) {
       depth++;
-      string += code.slice(cursor, cursor + 2);
-      cursor += 2;
+      string += cursor.nextSlice(2);
       continue;
     }
 
-    if (code[cursor] === "]" && code[cursor + 1] === "]") {
+    if (cursor.doesMatch("]]")) {
       depth--;
-      string += code.slice(cursor, cursor + 2);
-      cursor += 2;
+      string += cursor.nextSlice(2);
       continue;
     }
 
-    string += code[cursor++];
+    string += cursor.next();
   }
 
-  cursor += 2;
+  // skip the closing ]]
+  cursor.skip(2);
 
   return string;
 }
