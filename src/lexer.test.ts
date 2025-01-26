@@ -4,8 +4,120 @@ import { lexer, type LexToken } from "./lexer";
 import { notDeepEqual } from "node:assert";
 
 describe("lexer", () => {
-  it("nil", () => {
-    deepEqual(lexer("nil"), [{ type: "nil" }] satisfies LexToken[]);
+  describe("keywords", () => {
+    it("and", () => {
+      deepEqual(lexer("and"), [
+        { type: "keyword", value: "and" },
+      ] satisfies LexToken[]);
+    });
+
+    it("break", () => {
+      deepEqual(lexer("break"), [
+        { type: "keyword", value: "break" },
+      ] satisfies LexToken[]);
+    });
+
+    it("do", () => {
+      deepEqual(lexer("do"), [
+        { type: "keyword", value: "do" },
+      ] satisfies LexToken[]);
+    });
+
+    it("if", () => {
+      deepEqual(lexer("if"), [
+        { type: "keyword", value: "if" },
+      ] satisfies LexToken[]);
+    });
+
+    it("else", () => {
+      deepEqual(lexer("else"), [
+        { type: "keyword", value: "else" },
+      ] satisfies LexToken[]);
+    });
+
+    it("elseif", () => {
+      deepEqual(lexer("elseif"), [
+        { type: "keyword", value: "elseif" },
+      ] satisfies LexToken[]);
+    });
+
+    it("end", () => {
+      deepEqual(lexer("end"), [
+        { type: "keyword", value: "end" },
+      ] satisfies LexToken[]);
+    });
+
+    it("for", () => {
+      deepEqual(lexer("for"), [
+        { type: "keyword", value: "for" },
+      ] satisfies LexToken[]);
+    });
+
+    it("function", () => {
+      deepEqual(lexer("function"), [
+        { type: "keyword", value: "function" },
+      ] satisfies LexToken[]);
+    });
+
+    it("in", () => {
+      deepEqual(lexer("in"), [
+        { type: "keyword", value: "in" },
+      ] satisfies LexToken[]);
+    });
+
+    it("local", () => {
+      deepEqual(lexer("local"), [
+        { type: "keyword", value: "local" },
+      ] satisfies LexToken[]);
+    });
+
+    it("nil", () => {
+      deepEqual(lexer("nil"), [
+        { type: "keyword", value: "nil" },
+      ] satisfies LexToken[]);
+    });
+
+    it("not", () => {
+      deepEqual(lexer("not"), [
+        { type: "keyword", value: "not" },
+      ] satisfies LexToken[]);
+    });
+
+    it("or", () => {
+      deepEqual(lexer("or"), [
+        { type: "keyword", value: "or" },
+      ] satisfies LexToken[]);
+    });
+
+    it("repeat", () => {
+      deepEqual(lexer("repeat"), [
+        { type: "keyword", value: "repeat" },
+      ] satisfies LexToken[]);
+    });
+
+    it("return", () => {
+      deepEqual(lexer("return"), [
+        { type: "keyword", value: "return" },
+      ] satisfies LexToken[]);
+    });
+
+    it("then", () => {
+      deepEqual(lexer("then"), [
+        { type: "keyword", value: "then" },
+      ] satisfies LexToken[]);
+    });
+
+    it("until", () => {
+      deepEqual(lexer("until"), [
+        { type: "keyword", value: "until" },
+      ] satisfies LexToken[]);
+    });
+
+    it("while", () => {
+      deepEqual(lexer("while"), [
+        { type: "keyword", value: "while" },
+      ] satisfies LexToken[]);
+    });
   });
 
   describe("identifiers", () => {

@@ -1,16 +1,37 @@
 export type LexToken =
+  | { type: "keyword"; value: (typeof KEYWORDS)[number] }
   | {
       type: (typeof ALLOWED_SPECIAL_CHARS)[number];
     }
-  | { type: "identifier"; value: string }
-  | { type: "nil" }
   | { type: "boolean"; value: boolean }
   | { type: "string"; value: string }
   | {
       type: "number";
       value: string;
-    };
+    }
+  | { type: "identifier"; value: string };
 
+const KEYWORDS = [
+  "and",
+  "break",
+  "do",
+  "if",
+  "else",
+  "elseif",
+  "end",
+  "for",
+  "function",
+  "in",
+  "local",
+  "nil",
+  "not",
+  "or",
+  "repeat",
+  "return",
+  "then",
+  "until",
+  "while",
+] as const;
 const ALLOWED_SPECIAL_CHARS = ["+", "-", "/", "*", "(", ")"] as const;
 
 // TODO: see how much faster would avoiding regexes be (for isDigit, identifiers, etc)
@@ -25,14 +46,20 @@ export function lexer(code: string) {
       continue;
     }
 
-    if (isSpecialChar(char)) {
-      tokens.push({ type: char });
+    const foundKeyword = KEYWORDS.find(
+      (keyword) => keyword === code.slice(cursor - 1, cursor + keyword.length),
+    );
+    if (foundKeyword) {
+      tokens.push({
+        type: "keyword",
+        value: foundKeyword,
+      });
+      cursor += foundKeyword.length - 1;
       continue;
     }
 
-    if (code.slice(cursor - 1, cursor + 2) === "nil") {
-      tokens.push({ type: "nil" });
-      cursor += 2;
+    if (isSpecialChar(char)) {
+      tokens.push({ type: char });
       continue;
     }
 
