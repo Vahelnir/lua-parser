@@ -1,7 +1,12 @@
 export type LexToken =
   | { type: "keyword"; value: (typeof KEYWORDS)[number] }
   | {
-      type: (typeof ALLOWED_SPECIAL_CHARS)[number];
+      type: "operator";
+      value: (typeof OPERATORS)[number];
+    }
+  | {
+      type: "punctuation";
+      value: (typeof PUNCTUATION)[number];
     }
   | { type: "boolean"; value: boolean }
   | { type: "string"; value: string }
@@ -16,8 +21,9 @@ const KEYWORDS = [
   "break",
   "do",
   "if",
-  "else",
+  // NOTE: elseif needs to be before else to avoid matching else
   "elseif",
+  "else",
   "end",
   "for",
   "function",
@@ -32,7 +38,8 @@ const KEYWORDS = [
   "until",
   "while",
 ] as const;
-const ALLOWED_SPECIAL_CHARS = ["+", "-", "/", "*", "(", ")"] as const;
+const OPERATORS = ["+", "-", "/", "*", "="] as const;
+const PUNCTUATION = ["(", ")", ";", "{", "}", "[", "]", ",", "."] as const;
 
 // TODO: see how much faster would avoiding regexes be (for isDigit, identifiers, etc)
 
@@ -47,7 +54,8 @@ export function lexer(code: string) {
     }
 
     const foundKeyword = KEYWORDS.find(
-      (keyword) => keyword === code.slice(cursor - 1, cursor + keyword.length),
+      (keyword) =>
+        keyword === code.slice(cursor - 1, cursor + keyword.length - 1),
     );
     if (foundKeyword) {
       tokens.push({
@@ -55,11 +63,6 @@ export function lexer(code: string) {
         value: foundKeyword,
       });
       cursor += foundKeyword.length - 1;
-      continue;
-    }
-
-    if (isSpecialChar(char)) {
-      tokens.push({ type: char });
       continue;
     }
 
@@ -161,6 +164,16 @@ export function lexer(code: string) {
       continue;
     }
 
+    if (isOperator(char)) {
+      tokens.push({ type: "operator", value: char });
+      continue;
+    }
+
+    if (isPunctuation(char)) {
+      tokens.push({ type: "punctuation", value: char });
+      continue;
+    }
+
     // identifiers
     if (/[a-zA-Z_]/.test(char)) {
       let identifier = char;
@@ -178,10 +191,12 @@ export function lexer(code: string) {
   return tokens;
 }
 
-function isSpecialChar(
-  char: string,
-): char is (typeof ALLOWED_SPECIAL_CHARS)[number] {
-  return ALLOWED_SPECIAL_CHARS.includes(char as any);
+function isOperator(char: string): char is (typeof OPERATORS)[number] {
+  return OPERATORS.includes(char as any);
+}
+
+function isPunctuation(char: string): char is (typeof PUNCTUATION)[number] {
+  return PUNCTUATION.includes(char as any);
 }
 
 function isDigit(char: string) {

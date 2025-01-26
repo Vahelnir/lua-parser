@@ -275,7 +275,9 @@ describe("lexer", () => {
 
     describe("should be invalid", () => {
       it("4.", () => {
-        throws(() => lexer("4."), new Error("Unexpected character: ."));
+        notDeepEqual(lexer("4."), [
+          { type: "number", value: "4." },
+        ] satisfies LexToken[]);
       });
 
       it("1e", () => {
@@ -285,7 +287,9 @@ describe("lexer", () => {
       });
 
       it("1e1.1", () => {
-        throws(() => lexer("1e1.1"));
+        notDeepEqual(lexer("1e1.1"), [
+          { type: "number", value: "1e1.1" },
+        ] satisfies LexToken[]);
       });
 
       it("1e-", () => {
@@ -293,6 +297,61 @@ describe("lexer", () => {
           { type: "number", value: "1e-" },
         ] satisfies LexToken[]);
       });
+    });
+  });
+
+  describe("more complex examples", () => {
+    it("local a = 4;", () => {
+      deepEqual(lexer("local a = 4;"), [
+        { type: "keyword", value: "local" },
+        { type: "identifier", value: "a" },
+        { type: "operator", value: "=" },
+        { type: "number", value: "4" },
+        { type: "punctuation", value: ";" },
+      ] satisfies LexToken[]);
+    });
+
+    it("a = 4", () => {
+      deepEqual(lexer("a = 4"), [
+        { type: "identifier", value: "a" },
+        { type: "operator", value: "=" },
+        { type: "number", value: "4" },
+      ] satisfies LexToken[]);
+    });
+
+    it("if true then return 4 end", () => {
+      deepEqual(lexer("if true then return 4 end"), [
+        { type: "keyword", value: "if" },
+        { type: "boolean", value: true },
+        { type: "keyword", value: "then" },
+        { type: "keyword", value: "return" },
+        { type: "number", value: "4" },
+        { type: "keyword", value: "end" },
+      ] satisfies LexToken[]);
+    });
+
+    it('local a = { hello = "hello"; deep = { something = true } }', () => {
+      deepEqual(
+        lexer('local a = { hello = "hello"; deep = { something = true } }'),
+        [
+          { type: "keyword", value: "local" },
+          { type: "identifier", value: "a" },
+          { type: "operator", value: "=" },
+          { type: "punctuation", value: "{" },
+          { type: "identifier", value: "hello" },
+          { type: "operator", value: "=" },
+          { type: "string", value: '"hello"' },
+          { type: "punctuation", value: ";" },
+          { type: "identifier", value: "deep" },
+          { type: "operator", value: "=" },
+          { type: "punctuation", value: "{" },
+          { type: "identifier", value: "something" },
+          { type: "operator", value: "=" },
+          { type: "boolean", value: true },
+          { type: "punctuation", value: "}" },
+          { type: "punctuation", value: "}" },
+        ] satisfies LexToken[],
+      );
     });
   });
 });
