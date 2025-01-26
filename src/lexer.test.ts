@@ -21,6 +21,46 @@ describe("lexer", () => {
     });
   });
 
+  describe("strings", () => {
+    it("''", () => {
+      deepEqual(lexer("''"), [
+        { type: "string", value: "''" },
+      ] satisfies LexToken[]);
+    });
+
+    it('""', () => {
+      deepEqual(lexer('""'), [
+        { type: "string", value: '""' },
+      ] satisfies LexToken[]);
+    });
+
+    it("'hello'", () => {
+      deepEqual(lexer("'hello'"), [
+        { type: "string", value: "'hello'" },
+      ] satisfies LexToken[]);
+    });
+
+    it('"hello"', () => {
+      deepEqual(lexer('"hello"'), [
+        { type: "string", value: '"hello"' },
+      ] satisfies LexToken[]);
+    });
+
+    describe("should throw", () => {
+      it("'\"", () => {
+        throws(() => lexer("'\""), new Error("Unfinished string"));
+      });
+
+      it("\"'", () => {
+        throws(() => lexer("\"'"), new Error("Unfinished string"));
+      });
+
+      it('"hello\nworld"', () => {
+        throws(() => lexer('"hello\nworld"'), new Error("Unfinished string"));
+      });
+    });
+  });
+
   describe("numbers", () => {
     it("4", () => {
       deepEqual(lexer("4"), [
@@ -98,19 +138,19 @@ describe("lexer", () => {
 
     describe("should throw", () => {
       it("4.", () => {
-        throws(() => lexer("4."));
+        throws(() => lexer("4."), new Error("Unexpected character: ."));
       });
 
       it("1e", () => {
-        throws(() => lexer("1e"));
+        throws(() => lexer("1e"), new Error("Unexpected character: e"));
       });
 
       it("1e1.1", () => {
-        throws(() => lexer("1e.1"));
+        throws(() => lexer("1e.1"), new Error("Unexpected character: e"));
       });
 
       it("1e-", () => {
-        throws(() => lexer("1e-"));
+        throws(() => lexer("1e-"), new Error("Unexpected character: e"));
       });
     });
   });

@@ -1,9 +1,10 @@
 export type LexToken =
-  | { type: "nil" }
-  | { type: "boolean"; value: boolean }
   | {
       type: (typeof ALLOWED_SPECIAL_CHARS)[number];
     }
+  | { type: "nil" }
+  | { type: "boolean"; value: boolean }
+  | { type: "string"; value: string }
   | {
       type: "number";
       value: number;
@@ -41,6 +42,22 @@ export function lexer(code: string) {
     if (code.slice(cursor - 1, cursor + 4) === "false") {
       tokens.push({ type: "boolean", value: false });
       cursor += 4;
+      continue;
+    }
+
+    // strings
+    if (char === '"' || char === "'") {
+      let string = "";
+      while (code[cursor] !== char) {
+        if (code[cursor] === undefined || code[cursor] === "\n") {
+          throw new Error("Unfinished string");
+        }
+
+        string += code[cursor++];
+      }
+
+      tokens.push({ type: "string", value: `${char}${string}${char}` });
+      cursor++;
       continue;
     }
 
