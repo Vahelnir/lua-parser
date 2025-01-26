@@ -39,9 +39,13 @@ export function lexer(code: string) {
       }
 
       // exponentials
-      if (code[cursor] === "e") {
+      if (
+        code[cursor] === "e" &&
+        (isDigit(code[cursor + 1]) ||
+          (["+", "-"].includes(code[cursor + 1]) && isDigit(code[cursor + 2])))
+      ) {
         number += code[cursor++];
-        if (code[cursor] === "+" || code[cursor] === "-") {
+        if (["+", "-"].includes(code[cursor])) {
           number += code[cursor++];
         }
 
