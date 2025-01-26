@@ -8,7 +8,7 @@ export type LexToken =
   | { type: "string"; value: string }
   | {
       type: "number";
-      value: number;
+      value: string;
     };
 
 const ALLOWED_SPECIAL_CHARS = ["+", "-", "/", "*", "(", ")"] as const;
@@ -130,7 +130,7 @@ export function lexer(code: string) {
         }
       }
 
-      tokens.push({ type: "number", value: parseFloat(number) });
+      tokens.push({ type: "number", value: number });
       continue;
     }
 
