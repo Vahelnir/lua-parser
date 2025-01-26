@@ -341,6 +341,112 @@ describe("lexer", () => {
     });
   });
 
+  describe("operators", () => {
+    it("a .. b", () => {
+      deepEqual(lexer("a .. b"), [
+        { type: "identifier", value: "a" },
+        { type: "operator", value: ".." },
+        { type: "identifier", value: "b" },
+      ] satisfies LexToken[]);
+    });
+
+    it("a == b", () => {
+      deepEqual(lexer("a == b"), [
+        { type: "identifier", value: "a" },
+        { type: "operator", value: "==" },
+        { type: "identifier", value: "b" },
+      ] satisfies LexToken[]);
+    });
+
+    it("a ~= b", () => {
+      deepEqual(lexer("a ~= b"), [
+        { type: "identifier", value: "a" },
+        { type: "operator", value: "~=" },
+        { type: "identifier", value: "b" },
+      ] satisfies LexToken[]);
+    });
+
+    it("a <= b", () => {
+      deepEqual(lexer("a <= b"), [
+        { type: "identifier", value: "a" },
+        { type: "operator", value: "<=" },
+        { type: "identifier", value: "b" },
+      ] satisfies LexToken[]);
+    });
+
+    it("a >= b", () => {
+      deepEqual(lexer("a >= b"), [
+        { type: "identifier", value: "a" },
+        { type: "operator", value: ">=" },
+        { type: "identifier", value: "b" },
+      ] satisfies LexToken[]);
+    });
+
+    it("a = b", () => {
+      deepEqual(lexer("a = b"), [
+        { type: "identifier", value: "a" },
+        { type: "operator", value: "=" },
+        { type: "identifier", value: "b" },
+      ] satisfies LexToken[]);
+    });
+
+    it("a + b", () => {
+      deepEqual(lexer("a + b"), [
+        { type: "identifier", value: "a" },
+        { type: "operator", value: "+" },
+        { type: "identifier", value: "b" },
+      ] satisfies LexToken[]);
+    });
+
+    it("a - b", () => {
+      deepEqual(lexer("a - b"), [
+        { type: "identifier", value: "a" },
+        { type: "operator", value: "-" },
+        { type: "identifier", value: "b" },
+      ] satisfies LexToken[]);
+    });
+
+    it("a / b", () => {
+      deepEqual(lexer("a / b"), [
+        { type: "identifier", value: "a" },
+        { type: "operator", value: "/" },
+        { type: "identifier", value: "b" },
+      ] satisfies LexToken[]);
+    });
+
+    it("a * b", () => {
+      deepEqual(lexer("a * b"), [
+        { type: "identifier", value: "a" },
+        { type: "operator", value: "*" },
+        { type: "identifier", value: "b" },
+      ] satisfies LexToken[]);
+    });
+
+    it("a ^ b", () => {
+      deepEqual(lexer("a ^ b"), [
+        { type: "identifier", value: "a" },
+        { type: "operator", value: "^" },
+        { type: "identifier", value: "b" },
+      ] satisfies LexToken[]);
+    });
+
+    it("a > b", () => {
+      deepEqual(lexer("a > b"), [
+        { type: "identifier", value: "a" },
+        { type: "operator", value: ">" },
+        { type: "identifier", value: "b" },
+      ] satisfies LexToken[]);
+    });
+
+    it("a < b", () => {
+      deepEqual(lexer("a < b"), [
+        { type: "identifier", value: "a" },
+        { type: "operator", value: "<" },
+        { type: "identifier", value: "b" },
+      ] satisfies LexToken[]);
+    });
+  });
+
   describe("more complex examples", () => {
     it("local a = 4;", () => {
       deepEqual(lexer("local a = 4;"), [

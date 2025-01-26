@@ -39,25 +39,40 @@ const KEYWORDS = [
   "until",
   "while",
 ] as const;
-const OPERATORS = ["+", "-", "/", "*", "="] as const;
+const OPERATORS = [
+  "..",
+  "<=",
+  ">=",
+  "==",
+  "~=",
+  "+",
+  "-",
+  "/",
+  "*",
+  "=",
+  "^",
+  "<",
+  ">",
+] as const;
 const PUNCTUATION = ["(", ")", ";", "{", "}", "[", "]", ",", "."] as const;
 
 // TODO: see how much faster would avoiding regexes be (for isDigit, identifiers, etc)
 
 export function lexer(code: string) {
   let cursor = 0;
-
   const tokens: LexToken[] = [];
+
+  function match(value: string, customCursor = cursor) {
+    return code.slice(customCursor, customCursor + value.length) === value;
+  }
+
   while (cursor < code.length) {
     const char = code[cursor++];
     if ([" ", "\n", "\t"].includes(char)) {
       continue;
     }
 
-    const foundKeyword = KEYWORDS.find(
-      (keyword) =>
-        keyword === code.slice(cursor - 1, cursor + keyword.length - 1),
-    );
+    const foundKeyword = KEYWORDS.find((keyword) => match(keyword, cursor - 1));
     if (foundKeyword) {
       tokens.push({
         type: "keyword",
@@ -67,13 +82,13 @@ export function lexer(code: string) {
       continue;
     }
 
-    if (code.slice(cursor - 1, cursor + 3) === "true") {
+    if (match("true", cursor - 1)) {
       tokens.push({ type: "boolean", value: true });
       cursor += 3;
       continue;
     }
 
-    if (code.slice(cursor - 1, cursor + 4) === "false") {
+    if (match("false", cursor - 1)) {
       tokens.push({ type: "boolean", value: false });
       cursor += 4;
       continue;
@@ -96,7 +111,7 @@ export function lexer(code: string) {
     }
 
     // multiline strings
-    if (char === "[" && code[cursor] === "[") {
+    if (match("[[", cursor - 1)) {
       cursor++;
       let string = extractMultilineString(code, cursor);
       cursor += string.length + 2;
@@ -106,7 +121,7 @@ export function lexer(code: string) {
     }
 
     // comments
-    if (char === "-" && code[cursor] === "-") {
+    if (match("--", cursor - 1)) {
       cursor++;
       let comment = "";
       if (code[cursor] === "[" && code[cursor + 1] === "[") {
@@ -158,8 +173,12 @@ export function lexer(code: string) {
       continue;
     }
 
-    if (isOperator(char)) {
-      tokens.push({ type: "operator", value: char });
+    const foundOperator = OPERATORS.find((operator) =>
+      match(operator, cursor - 1),
+    );
+    if (foundOperator) {
+      tokens.push({ type: "operator", value: foundOperator });
+      cursor += foundOperator.length - 1;
       continue;
     }
 
