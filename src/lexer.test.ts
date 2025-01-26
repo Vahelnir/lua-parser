@@ -1,10 +1,63 @@
 import { describe, it } from "node:test";
 import { deepEqual, throws } from "node:assert/strict";
 import { lexer, type LexToken } from "./lexer";
+import { notDeepEqual } from "node:assert";
 
 describe("lexer", () => {
   it("nil", () => {
     deepEqual(lexer("nil"), [{ type: "nil" }] satisfies LexToken[]);
+  });
+
+  describe("identifiers", () => {
+    it("a", () => {
+      deepEqual(lexer("a"), [
+        { type: "identifier", value: "a" },
+      ] satisfies LexToken[]);
+    });
+
+    it("a1", () => {
+      deepEqual(lexer("a1"), [
+        { type: "identifier", value: "a1" },
+      ] satisfies LexToken[]);
+    });
+
+    it("a_b", () => {
+      deepEqual(lexer("a_b"), [
+        { type: "identifier", value: "a_b" },
+      ] satisfies LexToken[]);
+    });
+
+    it("_a", () => {
+      deepEqual(lexer("_a"), [
+        { type: "identifier", value: "_a" },
+      ] satisfies LexToken[]);
+    });
+
+    it("_1", () => {
+      deepEqual(lexer("_1"), [
+        { type: "identifier", value: "_1" },
+      ] satisfies LexToken[]);
+    });
+
+    it("_", () => {
+      deepEqual(lexer("_"), [
+        { type: "identifier", value: "_" },
+      ] satisfies LexToken[]);
+    });
+
+    describe("should be invalid", () => {
+      it("1a", () => {
+        notDeepEqual(lexer("1a"), [
+          { type: "identifier", value: "1a" },
+        ] satisfies LexToken[]);
+      });
+
+      it("1_", () => {
+        notDeepEqual(lexer("1_"), [
+          { type: "identifier", value: "1_" },
+        ] satisfies LexToken[]);
+      });
+    });
   });
 
   describe("booleans", () => {
@@ -58,7 +111,7 @@ describe("lexer", () => {
       ] satisfies LexToken[]);
     });
 
-    describe("should throw", () => {
+    describe("should be invalid", () => {
       it("'\"", () => {
         throws(() => lexer("'\""), new Error("Unfinished string"));
       });
@@ -152,7 +205,7 @@ describe("lexer", () => {
       ] satisfies LexToken[]);
     });
 
-    describe("should throw", () => {
+    describe("should be invalid", () => {
       it("4.", () => {
         throws(() => lexer("4."), new Error("Unexpected character: ."));
       });

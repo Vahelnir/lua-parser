@@ -2,6 +2,7 @@ export type LexToken =
   | {
       type: (typeof ALLOWED_SPECIAL_CHARS)[number];
     }
+  | { type: "identifier"; value: string }
   | { type: "nil" }
   | { type: "boolean"; value: boolean }
   | { type: "string"; value: string }
@@ -11,6 +12,8 @@ export type LexToken =
     };
 
 const ALLOWED_SPECIAL_CHARS = ["+", "-", "/", "*", "(", ")"] as const;
+
+// TODO: see how much faster would avoiding regexes be (for isDigit, identifiers, etc)
 
 export function lexer(code: string) {
   let cursor = 0;
@@ -61,6 +64,7 @@ export function lexer(code: string) {
       continue;
     }
 
+    // multiline strings
     if (char === "[" && code[cursor] === "[") {
       cursor++;
       let string = "";
@@ -127,6 +131,17 @@ export function lexer(code: string) {
       }
 
       tokens.push({ type: "number", value: parseFloat(number) });
+      continue;
+    }
+
+    // identifiers
+    if (/[a-zA-Z_]/.test(char)) {
+      let identifier = char;
+      while (code[cursor] !== undefined && /[a-zA-Z_0-9]/.test(code[cursor])) {
+        identifier += code[cursor++];
+      }
+
+      tokens.push({ type: "identifier", value: identifier });
       continue;
     }
 
