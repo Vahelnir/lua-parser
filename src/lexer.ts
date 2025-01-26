@@ -14,7 +14,8 @@ export type LexToken =
       type: "number";
       value: string;
     }
-  | { type: "identifier"; value: string };
+  | { type: "identifier"; value: string }
+  | { type: "comment"; value: string };
 
 const KEYWORDS = [
   "and",
@@ -97,35 +98,28 @@ export function lexer(code: string) {
     // multiline strings
     if (char === "[" && code[cursor] === "[") {
       cursor++;
-      let string = "";
-      let depth = 0;
-      while (
-        !(code[cursor] === "]" && code[cursor + 1] === "]" && depth === 0)
-      ) {
-        if (code[cursor] === undefined) {
-          throw new Error("Unfinished string");
-        }
-
-        if (code[cursor] === "[" && code[cursor + 1] === "[") {
-          depth++;
-          string += code.slice(cursor, cursor + 2);
-          cursor += 2;
-          continue;
-        }
-
-        if (code[cursor] === "]" && code[cursor + 1] === "]") {
-          depth--;
-          string += code.slice(cursor, cursor + 2);
-          cursor += 2;
-          continue;
-        }
-
-        string += code[cursor++];
-      }
-
-      cursor += 2;
+      let string = extractMultilineString(code, cursor);
+      cursor += string.length + 2;
 
       tokens.push({ type: "string", value: `[[${string}]]` });
+      continue;
+    }
+
+    // comments
+    if (char === "-" && code[cursor] === "-") {
+      cursor++;
+      let comment = "";
+      if (code[cursor] === "[" && code[cursor + 1] === "[") {
+        cursor += 2;
+        comment += `${extractMultilineString(code, cursor)}`;
+        cursor += comment.length + 2;
+      } else {
+        while (code[cursor] && code[cursor] !== "\n") {
+          comment += code[cursor++];
+        }
+      }
+
+      tokens.push({ type: "comment", value: comment });
       continue;
     }
 
@@ -201,4 +195,34 @@ function isPunctuation(char: string): char is (typeof PUNCTUATION)[number] {
 
 function isDigit(char: string) {
   return /[0-9]/.test(char);
+}
+
+function extractMultilineString(code: string, cursor: number) {
+  let string = "";
+  let depth = 0;
+  while (!(code[cursor] === "]" && code[cursor + 1] === "]" && depth === 0)) {
+    if (code[cursor] === undefined) {
+      throw new Error("Unfinished string");
+    }
+
+    if (code[cursor] === "[" && code[cursor + 1] === "[") {
+      depth++;
+      string += code.slice(cursor, cursor + 2);
+      cursor += 2;
+      continue;
+    }
+
+    if (code[cursor] === "]" && code[cursor + 1] === "]") {
+      depth--;
+      string += code.slice(cursor, cursor + 2);
+      cursor += 2;
+      continue;
+    }
+
+    string += code[cursor++];
+  }
+
+  cursor += 2;
+
+  return string;
 }

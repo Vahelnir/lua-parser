@@ -300,6 +300,47 @@ describe("lexer", () => {
     });
   });
 
+  describe("comment", () => {
+    it("-- hello", () => {
+      deepEqual(lexer("-- hello"), [
+        { type: "comment", value: " hello" },
+      ] satisfies LexToken[]);
+    });
+
+    it("-- hello\nlocal test = 1;", () => {
+      deepEqual(lexer("-- hello\nlocal test = 1;"), [
+        { type: "comment", value: " hello" },
+        { type: "keyword", value: "local" },
+        { type: "identifier", value: "test" },
+        { type: "operator", value: "=" },
+        { type: "number", value: "1" },
+        { type: "punctuation", value: ";" },
+      ] satisfies LexToken[]);
+    });
+
+    it("--[[ hello ]]", () => {
+      deepEqual(lexer("--[[ hello ]]"), [
+        { type: "comment", value: " hello " },
+      ] satisfies LexToken[]);
+    });
+
+    it("--[[ hello\nworld ]]", () => {
+      deepEqual(lexer("--[[ hello\nworld ]]"), [
+        { type: "comment", value: " hello\nworld " },
+      ] satisfies LexToken[]);
+    });
+
+    it("--[[ hello\nworld ]]\nlocal a = 'hello'", () => {
+      deepEqual(lexer("--[[ hello\nworld ]]\nlocal a = 'hello'"), [
+        { type: "comment", value: " hello\nworld " },
+        { type: "keyword", value: "local" },
+        { type: "identifier", value: "a" },
+        { type: "operator", value: "=" },
+        { type: "string", value: "'hello'" },
+      ] satisfies LexToken[]);
+    });
+  });
+
   describe("more complex examples", () => {
     it("local a = 4;", () => {
       deepEqual(lexer("local a = 4;"), [
