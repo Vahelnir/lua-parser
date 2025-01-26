@@ -90,7 +90,7 @@ export function lexer(code: string) {
         string += code[cursor++];
       }
 
-      tokens.push({ type: "string", value: `${char}${string}${char}` });
+      tokens.push({ type: "string", value: `${string}` });
       cursor++;
       continue;
     }
@@ -101,7 +101,7 @@ export function lexer(code: string) {
       let string = extractMultilineString(code, cursor);
       cursor += string.length + 2;
 
-      tokens.push({ type: "string", value: `[[${string}]]` });
+      tokens.push({ type: "string", value: string });
       continue;
     }
 

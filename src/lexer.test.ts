@@ -189,37 +189,37 @@ describe("lexer", () => {
   describe("strings", () => {
     it("''", () => {
       deepEqual(lexer("''"), [
-        { type: "string", value: "''" },
+        { type: "string", value: "" },
       ] satisfies LexToken[]);
     });
 
     it('""', () => {
       deepEqual(lexer('""'), [
-        { type: "string", value: '""' },
+        { type: "string", value: "" },
       ] satisfies LexToken[]);
     });
 
     it("'hello'", () => {
       deepEqual(lexer("'hello'"), [
-        { type: "string", value: "'hello'" },
+        { type: "string", value: "hello" },
       ] satisfies LexToken[]);
     });
 
     it('"hello"', () => {
       deepEqual(lexer('"hello"'), [
-        { type: "string", value: '"hello"' },
+        { type: "string", value: "hello" },
       ] satisfies LexToken[]);
     });
 
     it("[[ hello ]]", () => {
       deepEqual(lexer("[[ hello ]]"), [
-        { type: "string", value: "[[ hello ]]" },
+        { type: "string", value: " hello " },
       ] satisfies LexToken[]);
     });
 
     it("[[\\nhello\\n[[ world ]]\\n]]", () => {
       deepEqual(lexer("[[\nhello\n[[ world ]]\n]]"), [
-        { type: "string", value: "[[\nhello\n[[ world ]]\n]]" },
+        { type: "string", value: "\nhello\n[[ world ]]\n" },
       ] satisfies LexToken[]);
     });
 
@@ -336,7 +336,7 @@ describe("lexer", () => {
         { type: "keyword", value: "local" },
         { type: "identifier", value: "a" },
         { type: "operator", value: "=" },
-        { type: "string", value: "'hello'" },
+        { type: "string", value: "hello" },
       ] satisfies LexToken[]);
     });
   });
@@ -381,7 +381,7 @@ describe("lexer", () => {
           { type: "punctuation", value: "{" },
           { type: "identifier", value: "hello" },
           { type: "operator", value: "=" },
-          { type: "string", value: '"hello"' },
+          { type: "string", value: "hello" },
           { type: "punctuation", value: ";" },
           { type: "identifier", value: "deep" },
           { type: "operator", value: "=" },
