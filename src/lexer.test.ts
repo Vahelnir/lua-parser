@@ -3,6 +3,10 @@ import { deepEqual, throws } from "node:assert/strict";
 import { lexer, type LexToken } from "./lexer";
 
 describe("lexer", () => {
+  it("nil", () => {
+    deepEqual(lexer("nil"), [{ type: "nil" }] satisfies LexToken[]);
+  });
+
   describe("numbers", () => {
     it("4", () => {
       deepEqual(lexer("4"), [
