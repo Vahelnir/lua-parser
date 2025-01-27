@@ -1,5 +1,13 @@
 import type { LexToken } from "./lexer";
 
+export type AssignmentStatement = {
+  type: "assignment";
+  variables: Identifier[];
+  initialization: Expression[];
+};
+
+export type Statement = AssignmentStatement;
+
 export type BinaryExpression = {
   type: "binary";
   left: Expression;
@@ -7,15 +15,9 @@ export type BinaryExpression = {
   right: Expression;
 };
 
-export type IdentifierExpression = {
+export type Identifier = {
   type: "identifier";
   value: string;
-};
-
-export type AssignmentExpression = {
-  type: "assignment";
-  left: IdentifierExpression;
-  right: Expression;
 };
 
 export type UnaryExpression = {
@@ -39,8 +41,7 @@ export type LiteralExpression =
     };
 export type Expression =
   | BinaryExpression
-  | IdentifierExpression
-  | AssignmentExpression
+  | Identifier
   | LiteralExpression
   | UnaryExpression;
 
@@ -51,26 +52,54 @@ export function parser(tokens: LexToken[]) {
     return tokens[index];
   }
 
-  function expression(): Expression {
-    return assignmentExpression();
+  function statement() {
+    return assignmentStatement();
   }
 
-  function assignmentExpression(): Expression {
-    let left = comparisonExpression();
+  function assignmentStatement(): AssignmentStatement {
+    const name = varlist();
     const token = tokenAt(cursor);
-    while (token?.type === "operator" && token.value === "=") {
+    if (token?.type === "operator" && token.value === "=") {
       cursor++;
-      if (left.type !== "identifier") {
-        throw new Error("left side of assignment must be an identifier");
-      }
 
       return {
         type: "assignment",
-        left,
-        right: expression(),
+        variables: name,
+        initialization: explist(),
       };
     }
-    return left;
+
+    throw new Error(`Expected '=', found: ${JSON.stringify(token)}`);
+  }
+
+  function explist(): Expression[] {
+    const expressions = [exp()];
+
+    let token = tokenAt(cursor);
+    while (token?.type === "punctuation" && token.value === ",") {
+      cursor++;
+      expressions.push(exp());
+      token = tokenAt(cursor);
+    }
+
+    return expressions;
+  }
+
+  function varlist(): Identifier[] {
+    const identifiers = [identifier()];
+
+    let token = tokenAt(cursor);
+    while (token?.type === "punctuation" && token.value === ",") {
+      cursor++;
+      identifiers.push(identifier());
+      token = tokenAt(cursor);
+    }
+
+    return identifiers;
+  }
+
+  function exp(): Expression {
+    return comparisonExpression();
   }
 
   function comparisonExpression(): Expression {
@@ -173,6 +202,17 @@ export function parser(tokens: LexToken[]) {
     return literalExpression();
   }
 
+  function identifier(): Identifier {
+    const token = tokenAt(cursor++);
+    if (token?.type !== "identifier") {
+      throw new Error(
+        `Expected an identifier, found: ${JSON.stringify(token)}`,
+      );
+    }
+
+    return { type: "identifier", value: token.value };
+  }
+
   function literalExpression(): Expression {
     const token = tokenAt(cursor++);
     if (token?.type === "number") {
@@ -187,13 +227,9 @@ export function parser(tokens: LexToken[]) {
       return { type: "boolean_literal", value: token.value };
     }
 
-    if (token?.type === "identifier") {
-      return { type: "identifier", value: token.value };
-    }
-
     if (token?.type === "punctuation") {
       if (token.value === "(") {
-        const expr = expression();
+        const expr = exp();
         const nextToken = tokenAt(cursor);
         if (nextToken?.type === "punctuation" && nextToken.value !== ")") {
           throw new Error("expected closing parenthesis");
@@ -207,5 +243,5 @@ export function parser(tokens: LexToken[]) {
     throw new Error(`Unexpected literal: ${JSON.stringify(token)}`);
   }
 
-  return expression();
+  return statement();
 }

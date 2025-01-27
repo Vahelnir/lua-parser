@@ -1,25 +1,79 @@
 import { describe, it } from "node:test";
 import { lexer } from "./lexer";
 import { deepEqual, throws } from "node:assert";
-import { parser } from "./parser";
+import { parser, type Statement } from "./parser";
 
 describe("parser", () => {
-  describe("assignment", () => {
+  describe("var", () => {
     it("a = 1 + 2", () => {
       const tokens = lexer("a = 1 + 2");
       deepEqual(parser(tokens), {
         type: "assignment",
-        left: {
-          type: "identifier",
-          value: "a",
-        },
-        right: {
-          type: "binary",
-          left: { type: "number_literal", value: "1" },
-          operator: "+",
-          right: { type: "number_literal", value: "2" },
-        },
-      });
+        variables: [
+          {
+            type: "identifier",
+            value: "a",
+          },
+        ],
+        initialization: [
+          {
+            type: "binary",
+            left: { type: "number_literal", value: "1" },
+            operator: "+",
+            right: { type: "number_literal", value: "2" },
+          },
+        ],
+      } satisfies Statement);
+    });
+
+    it("a, b = 2", () => {
+      const tokens = lexer("a, b = 2");
+      deepEqual(parser(tokens), {
+        type: "assignment",
+        variables: [
+          {
+            type: "identifier",
+            value: "a",
+          },
+          {
+            type: "identifier",
+            value: "b",
+          },
+        ],
+        initialization: [
+          {
+            type: "number_literal",
+            value: "2",
+          },
+        ],
+      } satisfies Statement);
+    });
+
+    it("a, b = 'hello', 'world'", () => {
+      const tokens = lexer("a, b = 'hello', 'world'");
+      deepEqual(parser(tokens), {
+        type: "assignment",
+        variables: [
+          {
+            type: "identifier",
+            value: "a",
+          },
+          {
+            type: "identifier",
+            value: "b",
+          },
+        ],
+        initialization: [
+          {
+            type: "string_literal",
+            value: "hello",
+          },
+          {
+            type: "string_literal",
+            value: "world",
+          },
+        ],
+      } satisfies Statement);
     });
   });
 
