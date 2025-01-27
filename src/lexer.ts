@@ -42,6 +42,7 @@ const KEYWORDS = [
   "while",
 ] as const;
 const OPERATORS = [
+  "...",
   "..",
   "<=",
   ">=",
@@ -55,8 +56,10 @@ const OPERATORS = [
   "^",
   "<",
   ">",
+  "#",
+  "%",
 ] as const;
-const PUNCTUATION = ["(", ")", ";", "{", "}", "[", "]", ",", "."] as const;
+const PUNCTUATION = ["(", ")", ";", "{", "}", "[", "]", ",", ".", ":"] as const;
 
 // TODO: see how much faster would avoiding regexes be (for isDigit, identifiers, etc)
 
