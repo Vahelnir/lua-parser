@@ -3,11 +3,19 @@ import { lexer } from "./lexer";
 import { deepEqual, throws } from "node:assert";
 import { parser, type Statement } from "./parser";
 
+function parse(code: string) {
+  return parser(lexer(code));
+}
+
+function parseExpression(code: string) {
+  return parser(lexer(`a = ${code}`)).initialization[0];
+}
+
 describe("parser", () => {
   describe("var", () => {
     it("a = 1 + 2", () => {
-      const tokens = lexer("a = 1 + 2");
-      deepEqual(parser(tokens), {
+      const ast = parse("a = 1 + 2");
+      deepEqual(ast, {
         type: "assignment",
         variables: [
           {
@@ -27,8 +35,8 @@ describe("parser", () => {
     });
 
     it("a, b = 2", () => {
-      const tokens = lexer("a, b = 2");
-      deepEqual(parser(tokens), {
+      const ast = parse("a, b = 2");
+      deepEqual(ast, {
         type: "assignment",
         variables: [
           {
@@ -50,8 +58,8 @@ describe("parser", () => {
     });
 
     it("a, b = 'hello', 'world'", () => {
-      const tokens = lexer("a, b = 'hello', 'world'");
-      deepEqual(parser(tokens), {
+      const ast = parse("a, b = 'hello', 'world'");
+      deepEqual(ast, {
         type: "assignment",
         variables: [
           {
@@ -79,8 +87,8 @@ describe("parser", () => {
 
   describe("equality", () => {
     it("1 == 2", () => {
-      const tokens = lexer("1 == 2");
-      deepEqual(parser(tokens), {
+      const expressionAst = parseExpression("1 == 2");
+      deepEqual(expressionAst, {
         type: "binary",
         left: { type: "number_literal", value: "1" },
         operator: "==",
@@ -89,8 +97,8 @@ describe("parser", () => {
     });
 
     it("1 ~= 2", () => {
-      const tokens = lexer("1 ~= 2");
-      deepEqual(parser(tokens), {
+      const expressionAst = parseExpression("1 ~= 2");
+      deepEqual(expressionAst, {
         type: "binary",
         left: { type: "number_literal", value: "1" },
         operator: "~=",
@@ -99,8 +107,8 @@ describe("parser", () => {
     });
 
     it("1 <= 2 >= 3", () => {
-      const tokens = lexer("1 == 2 == 3");
-      deepEqual(parser(tokens), {
+      const expressionAst = parseExpression("1 == 2 == 3");
+      deepEqual(expressionAst, {
         type: "binary",
         left: { type: "number_literal", value: "1" },
         operator: "==",
@@ -116,8 +124,8 @@ describe("parser", () => {
 
   describe("terms", () => {
     it("1 + 2", () => {
-      const tokens = lexer("1 + 2");
-      deepEqual(parser(tokens), {
+      const expressionAst = parseExpression("1 + 2");
+      deepEqual(expressionAst, {
         type: "binary",
         left: { type: "number_literal", value: "1" },
         operator: "+",
@@ -126,8 +134,8 @@ describe("parser", () => {
     });
 
     it("1 + 2 + 3", () => {
-      const tokens = lexer("1 + 2 + 3");
-      deepEqual(parser(tokens), {
+      const expressionAst = parseExpression("1 + 2 + 3");
+      deepEqual(expressionAst, {
         type: "binary",
         left: {
           type: "binary",
@@ -143,8 +151,8 @@ describe("parser", () => {
 
   describe("factors", () => {
     it("1 * 2 / 3 + 4", () => {
-      const tokens = lexer("1 * 2 / 3 + 4");
-      deepEqual(parser(tokens), {
+      const expressionAst = parseExpression("1 * 2 / 3 + 4");
+      deepEqual(expressionAst, {
         type: "binary",
         left: {
           type: "binary",
@@ -163,8 +171,8 @@ describe("parser", () => {
     });
 
     it("1 * 2 / (3 + 4)", () => {
-      const tokens = lexer("1 * 2 / 3 + 4");
-      deepEqual(parser(tokens), {
+      const expressionAst = parseExpression("1 * 2 / 3 + 4");
+      deepEqual(expressionAst, {
         type: "binary",
         left: {
           type: "binary",
@@ -185,8 +193,8 @@ describe("parser", () => {
 
   describe("unary", () => {
     it("-1", () => {
-      const tokens = lexer("-1");
-      deepEqual(parser(tokens), {
+      const expressionAst = parseExpression("-1");
+      deepEqual(expressionAst, {
         type: "unary",
         operator: "-",
         argument: { type: "number_literal", value: "1" },
@@ -194,8 +202,8 @@ describe("parser", () => {
     });
 
     it("1 - -1", () => {
-      const tokens = lexer("1 - -1");
-      deepEqual(parser(tokens), {
+      const expressionAst = parseExpression("1 - -1");
+      deepEqual(expressionAst, {
         type: "binary",
         left: { type: "number_literal", value: "1" },
         operator: "-",
@@ -208,8 +216,8 @@ describe("parser", () => {
     });
 
     it("1 - - -1", () => {
-      const tokens = lexer("1 - - -1");
-      deepEqual(parser(tokens), {
+      const expressionAst = parseExpression("1 - - -1");
+      deepEqual(expressionAst, {
         type: "binary",
         left: { type: "number_literal", value: "1" },
         operator: "-",
@@ -226,8 +234,8 @@ describe("parser", () => {
     });
 
     it("-(3 * 4)", () => {
-      const tokens = lexer("-(3 * 4)");
-      deepEqual(parser(tokens), {
+      const expressionAst = parseExpression("-(3 * 4)");
+      deepEqual(expressionAst, {
         type: "unary",
         operator: "-",
         argument: {
@@ -240,8 +248,8 @@ describe("parser", () => {
     });
 
     it("not true", () => {
-      const tokens = lexer("not true");
-      deepEqual(parser(tokens), {
+      const expressionAst = parseExpression("not true");
+      deepEqual(expressionAst, {
         type: "unary",
         operator: "not",
         argument: { type: "boolean_literal", value: true },
@@ -249,8 +257,8 @@ describe("parser", () => {
     });
 
     it("not not true", () => {
-      const tokens = lexer("not not true");
-      deepEqual(parser(tokens), {
+      const expressionAst = parseExpression("not not true");
+      deepEqual(expressionAst, {
         type: "unary",
         operator: "not",
         argument: {
@@ -262,8 +270,8 @@ describe("parser", () => {
     });
 
     it("-not true", () => {
-      const tokens = lexer("-not true");
-      deepEqual(parser(tokens), {
+      const expressionAst = parseExpression("-not true");
+      deepEqual(expressionAst, {
         type: "unary",
         operator: "-",
         argument: {
@@ -275,8 +283,8 @@ describe("parser", () => {
     });
 
     it("not -true", () => {
-      const tokens = lexer("not -true");
-      deepEqual(parser(tokens), {
+      const expressionAst = parseExpression("not -true");
+      deepEqual(expressionAst, {
         type: "unary",
         operator: "not",
         argument: {
